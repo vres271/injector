@@ -75,7 +75,8 @@ byte menu = 0;
 bool menuEntered, started = false;
 
 int T = 100, Rpm = 600, t1=10, d=0;
-unsigned long t, lastInjectorOnTime = 0, timer=60000, timerStarted = 0, lastTimeRefresh=0;
+unsigned long t, lastInjectorOnTime = 0,  timerStarted = 0, lastTimeRefresh=0;
+long timer=60000;
 
 void setup() {
   //Serial.begin(9600); 
@@ -114,21 +115,17 @@ void loop() {
 
   if(started) {
     if(t > (lastInjectorOnTime + t1)) {
-      digitalWrite(INJECTORS_PIN, LOW);   
-      digitalWrite(LED_BUILTIN, LOW);   
+      switchInjectors(false);
     } 
     if(t > (lastInjectorOnTime + T)) {
-      digitalWrite(INJECTORS_PIN, HIGH);  
-      digitalWrite(LED_BUILTIN, HIGH);  
+      switchInjectors(true);
       lastInjectorOnTime = t;
     }
   } else {
     if(!digitalRead(BTN_PIN)) {
-      digitalWrite(INJECTORS_PIN, HIGH);  
-      digitalWrite(LED_BUILTIN, HIGH);  
+      switchInjectors(true); 
     } else {
-      digitalWrite(INJECTORS_PIN, LOW);   
-      digitalWrite(LED_BUILTIN, LOW);   
+      switchInjectors(false); 
     }
   }
 
@@ -151,6 +148,7 @@ void loop() {
       } else {
         timerStarted = 0;
         started = false;
+        switchInjectors(false);
       }
     } else {
       menuEntered=!menuEntered; 
@@ -179,38 +177,41 @@ void loop() {
         setT(d);
       };
       if(menu==4) {
-        setTimer(d);
+        setTimer(d*1000);
       };
       refreshDisplay();
     }
   }
+}
 
-
+void switchInjectors(bool state = true) {
+  digitalWrite(INJECTORS_PIN, state);   
+  digitalWrite(LED_BUILTIN, state);   
 }
 
 void setRpm(int d = 0) {
-  if(d<0 && Rpm+d <= 0) return;
-  if(d>0 && Rpm+d > 20000) return;
+  if(d<0 and Rpm+d <= 0) return;
+  if(d>0 and Rpm+d > 20000) return;
   Rpm = Rpm + d;
   T = int(240000/Rpm);
 }
 
 void sett1(int d = 0) {
-  if(d<0 && t1+d <= 0) return;
-  if(d>0 && t1+d > T) return;
+  if(d<0 and t1+d <= 0) return;
+  if(d>0 and t1+d > T) return;
   t1 = t1 + d;
 }
 
 void setT(int d = 0) {
-  if(d<0 && T-d < t1) return;
+  if(d<0 and T+d < t1) return;
   T = T + d;
   Rpm = int(240000/T);
 }
 
 void setTimer(int d = 0) {
-  if(d<0 && timer+d <= 0) return;
-  if(d>0 && timer+d > 3600000) return;
-  timer = timer + d*1000;
+  if(d<0 and (timer+d <= 0)) return;
+  if(d>0 and timer+d > 3600000) return;
+  timer = timer + d;
 }
 
 
